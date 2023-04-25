@@ -51,7 +51,7 @@ public class CustomGraphDatabaseService{
      * @return a new transaction instance
      */
     CustomTransaction beginTx() {
-        CustomTransaction Tx = new CustomTransaction(graphDb.beginTx());
+        CustomTransaction Tx = new CustomTransaction(graphDb.beginTx(), this);
         graphDbMonitor.startTransaction(Tx);
 
         // test
@@ -77,7 +77,7 @@ public class CustomGraphDatabaseService{
      * @return a new transaction instance
      */
     CustomTransaction beginTx(long timeout, TimeUnit unit) {
-        CustomTransaction Tx = new CustomTransaction(graphDb.beginTx(timeout, unit));
+        CustomTransaction Tx = new CustomTransaction(graphDb.beginTx(timeout, unit), this);
 
         // test
         System.out.print("Opened one Transaction in CustomGraphDatabaseService\n");

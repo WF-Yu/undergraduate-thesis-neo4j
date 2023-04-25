@@ -18,13 +18,12 @@ public class Main extends Thread{
     private enum RelTypes implements RelationshipType {
         LIKE
     }
-    private Node A, B;
-    private Relationship R;
+    private CustomNode A, B;
+    private CustomRelationship R;
     public static void main(final String[] args) throws IOException { // 这些static 啥的都有啥用啊？？？
         Main neoDb = new Main();
         neoDb.createDb();
         neoDb.create_graph();
-        neoDb.printDb();
 
         try {
             Main.sleep(1000);
@@ -54,14 +53,15 @@ public class Main extends Thread{
 
     void create_graph() {
 
+        // in case we need to rollback and retry the transaction, we need to write the corresponding code here. but it's not a good idea, how to hide this function in monitor?
         /* clear all the nodes first*/
         try (CustomTransaction Tx = customGraphDb.beginTx()){
             int cnt = 0;
-            ResourceIterable<Node> Nodes = Tx.getAllNodes(customGraphDb);
-            for (Node n : Nodes) {
+            ResourceIterable<CustomNode> Nodes = Tx.getAllNodes();
+            for (CustomNode n : Nodes) {
                 cnt++;
-                for(Relationship r : n.getRelationships()){
-                    r.delete();
+                for(CustomRelationship r : n.getRelationships()){
+                    r.relationship.delete();
                 }
                 n.delete();
             }
@@ -76,21 +76,20 @@ public class Main extends Thread{
                 System.out.print(e.toString());
             }
             finally {
-                System.out.print("*3\n"); // program will never come to here
+                System.out.print("*3\n");
                 Tx.close();
             }
-            // Tx.rollback();
             System.out.println("cleared " + cnt + " Nodes. Now the graph has no node");
         }
 
         try (CustomTransaction Tx = customGraphDb.beginTx()){
             A = Tx.createNode(label("Person"));
-            A.setProperty("name", "A");
+            A.node.setProperty("name", "A");
             B = Tx.createNode(label("Person"));
-            B.setProperty("name", "B");
+            B.node.setProperty("name", "B");
 
             R = A.createRelationshipTo(B, RelTypes.LIKE);
-            R.setProperty("date", 20230312);
+            R.relationship.setProperty("date", 20230312);
 
             try{
                 System.out.print("*1\n");
@@ -105,26 +104,24 @@ public class Main extends Thread{
                 System.out.print("*3\n");
                 Tx.close();
             }
-            // Tx.rollback();
         }
     }
     void printDb() {
         try (CustomTransaction Tx = customGraphDb.beginTx()){
 
-            ResourceIterable<Node> Nodes = Tx.getAllNodes(customGraphDb);
-            for (Node n : Nodes) {
+            ResourceIterable<CustomNode> Nodes = Tx.getAllNodes();
+            for (CustomNode n : Nodes) {
                 System.out.print(n.toString() + "\n" +
                         "Label: " + n.getLabels().toString() + "\n" +
-                        "Properties: " + n.getAllProperties().toString() + "\n");
-                for(Relationship r : n.getRelationships()){
+                        "Properties: " + n.node.getAllProperties().toString() + "\n");
+                for(CustomRelationship r : n.getRelationships()){
                     System.out.print("   Relationship: " + r.toString() + "\n" +
-                            "   Properties: " + r.getAllProperties().toString() + "\n");
+                            "   Properties: " + r.relationship.getAllProperties().toString() + "\n");
                 }
             }
             Tx.commit();
         }
     }
-
     void shutDown() {
         System.out.println();
         System.out.println("Shutting down database ...");

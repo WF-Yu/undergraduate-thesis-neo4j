@@ -1,9 +1,8 @@
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.event.LabelEntry;
 import org.neo4j.graphdb.event.PropertyEntry;
 import org.neo4j.graphdb.event.TransactionEventListener;
-import org.neo4j.graphdb.Node;
+
 public interface GraphDatabaseMonitor extends TransactionEventListener<TransactionInformation>{
     /**
      * when connect to database, this function will be called.
@@ -23,17 +22,22 @@ public interface GraphDatabaseMonitor extends TransactionEventListener<Transacti
      * now we need to delete its data in transactionDataMap
      * @param transactionId the hashCode() for the committed transaction
      */
-    public void endTransaction(Integer transactionId);
-    public Boolean ValidationTest();
-    public void UpdateTransactionDataMap(Transaction Tx,
+    void endTransaction(Integer transactionId);
+    Boolean ValidationTest(Integer transactionId);
+    void commitInBackground(Integer transactionId);
+    void UpdateTransactionDataMap(Integer transactionId,
                                          Iterable<Node> createdNodes, Iterable<Node> deletedNodes,
                                          Iterable<Relationship> createdRelationships, Iterable<Relationship> deletedRelationships,
                                          Iterable<PropertyEntry<Node>> assignedNodeProperties, Iterable<PropertyEntry<Node>> removedNodeProperties,
                                          Iterable<PropertyEntry<Relationship>> assignedRelationshipProperties, Iterable<PropertyEntry<Relationship>> removedRelationshipProperties,
                                          Iterable<LabelEntry> assignedLabels, Iterable<LabelEntry> removedLabels);
-    public void UpdateTransactionDataMap(Transaction Tx, Iterable<Node> readNodes);
-    // we need a function to monitor the read-only transaction.
-    // read-only transactoin can not be hooked by beforeCommit function.
-    // but we need to delete its data after it ends.
-    // HOW?????
+
+    void uploadRelationshipRead(Integer transactionId, ResourceIterable<Relationship> relationships);
+    void uploadRelationshipRead(Integer transactionId, Relationship relationship);
+    void uploadNodeRead(Integer transactionId, ResourceIterable<Node> nodes);
+    void uploadNodeRead(Integer transactionId, Node node);
+
+    boolean hasTransaction(Integer transactionId);
+
+
 }
